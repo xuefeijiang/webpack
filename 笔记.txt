@@ -1,0 +1,299 @@
+------------------------WEBPACK4------------------------
+
+	SPA|MPA: https://www.cnblogs.com/nangezi/p/9201226.html
+
+	webpack 4 目标: 模块化，工程化（开发，生产），自动化
+
+		官网: http://webpack.github.io/docs/
+		中文: https://webpack.docschina.org
+		前身: browserify	缺点，只能转化js
+
+	webpack作用?
+		干嘛的:	项目管理、打包、模块管理、加载资源(js/css/html/png../woff/data/vue...),转换器(loader)
+		前身：grunt/gulp/browserify->webpack->
+			 backbone/jq/angularjs/react / vue1.x/vue2-3/angular7
+
+	webpack的历史
+	
+		webpack1支持CMD和AMD，同时拥有丰富的plugin和loader，webpack逐渐得到广泛应用。
+		webpack2 支持ES Module，分析ESModule之间的依赖关系，webpack1必须将ES，Module转换成CommonJS模块，2支持tree sharking
+		webpack3 新的特性大都围绕ES Module提出，如Scope Hoisting和Magic Comment；
+			tree sharking: 
+				优化功能，顾名思义，就是将多余的代码给 “摇晃” 掉，在开发中我们经常使用一些第三方库，而这些第三方库只使用了这个库的一部门功能或代码，未使用的代码也要被打包进来，这样出口文件会非常大，tree-sharking 帮我们解决了这个问题，它可以将各个模块中没有使用的方法过滤掉，只对有效代码进行打包
+
+			Scope Hoisting:
+				 可以让 Webpack 打包出来的代码文件更小、运行的更快，它又译作 "作用域提升"，是在 Webpack3 中新推出的功能
+
+			Magic Comment:
+				魔法注释(magic comment)修改打包动态组件名称
+
+	环境支持： Node8+、npm5+
+
+	安装：
+		全局
+
+		npm i webpack webpack-cli -g
+		
+		cli 命令行工具 打包会依赖cli
+
+		本地
+		npm i webpack webpack-cli --save-dev 开发依赖
+
+	概念：
+		webpack是一种静态编译工具(预编译)
+		入口文件、出口、转换器、插件
+
+	打包
+		webpack  --mode development  会自动找src/index.js 到 dist/main.js
+		要求设置开发模式|生产模式
+
+		webpack 入口地址 --mode development  指定出口
+
+		环境分离
+			development:
+				a.浏览器调试工具
+				b.注释、开发阶段的详细错误日志和提示
+				c.快速和优化的增量构建机制
+			production:
+				a.开启所有的优化代码
+				b.更小的main大小
+				c.去除掉只在开发阶段运行的代码
+				d.Scope hoisting(作用域提升)和Tree-shaking(打包的结构只包含实际用到的 exports)
+
+	自动解决依赖:
+
+		原理：Webpack 会分析入口文件，解析包含依赖关系的各个文件。这些文件（模块）都打包到 main.js 。Webpack 会给每个模块分配一个唯一的 id 并通过这个 id 索引和访问模块。在页面启动时，会先执行 main.js 中的代码，其它模块会在运行 require 的时候再执行。
+
+	loader：
+		webpack默认只支持javascript文件(默认)
+		* 其他文件(CSS/LEASS/..)	需要用加载器(loader)
+
+		loader:	类似一种转化器， 它可以把一个东西，转成另一个
+			需要下载	style-loader(读取到的css文件插到页面)	css-loader(读取css文件)
+			下载: npm install style-loader css-loader -D
+			require('style-loader!css-loader!./xx.css')
+
+	配置:
+
+		1. 命令行  
+			webpack 入口地址 --mode development  指定出口
+		
+		2. coding
+			require('style-loader!css-loader!./xx.css')
+
+		3. 配置文件
+
+		   webpack 配置文件   √
+		   		默认:webpack.config.js
+
+		   webpack依赖的第三方的配置文件（bablerc) √√
+
+	配置 webpack.config.js  是一个nodejs
+		
+		作用: 配置一些webpack需要入口、出口、loader、Chunk代码块、Plugin扩展插件、Module模块
+
+		编写：
+			module.exports={
+				entry:'./src/index.js'	入口文件
+				output:{ 默认输出到dist
+					path:path.resolve(__dirname,'dist')//指定编译目录  不写默认指定到dist
+					filename:'js/boundle.js'//以编译目录为根的出口文件路径
+				},
+				module{
+					rules:[
+						{test:/\.css$/,use:['style-loader','css-loader']}
+					]
+				},
+				mode:'development' | production 区别环境
+			}
+
+
+
+		entry: 入口接收string | json
+			{app:'index1.js',app2:'index2.js'} 输出要求多输出
+		output: {
+			path:path.resolve(__dirname,'dist') //指定编译目录
+			publicPath:'/', //公共路径 影响资源(图)路径，devserver路径，多页资源路径，开发生产环境基础资源路径，cdn路径
+			filename:'bundle.js' 单文件输出 | '[name].js' 多输出  html引入app和app2 配合
+		}
+
+		webpack	开发环境下编译(打包到bundle.js)
+		webpack -p	生产环境下编译(打包到bundle.js,并压缩) == mode production 
+		webpack -w	监听文件改动,自动编译,不用每次运行,但不会自动刷新浏览器
+
+	----------------------------------------------
+
+	需要自动刷新： webServer 搭建前端开发服务器
+	
+		cnpm install webpack-dev-server -g | -D
+
+		默认： 自动打包（放到内存），创建前端开发型服务器(默认找webpack.config所在的位置，找index.html)
+
+		参数:
+			命令行1
+			webpack-dev-server --port 8088 --open --mode development
+
+			写到webpack.config.js配置文件2:
+
+				devServer: {//和module同级		publicPath:'/'
+					port: 8088,
+					open:true
+				}
+
+			把运行命令放到package.json文件:	devServer可以不要了
+				"scripts":{
+					"dev": "webpack-dev-server  --port 8088 --open"
+				}
+
+				终端: npm run dev
+
+		问题：代码错误没有报到正确位置
+		解决：devtool:'inline-source-map'
+	---------------------------------------------------
+	省略引入文件名后缀
+
+		配置webpack.config.js
+
+		resolve: { 	与module同级
+			extensions: [ '.js', '.css', '.json', '.jsx']
+		}
+		require('./style') 可以省略后缀名
+
+	--------------------------------------------------------------------------------
+	优雅降级: ES6->ES5  tracuer  babel
+
+		npm install babel-loader @babel/core @babel/preset-env -D
+
+			babel-loader 
+
+			@babel/core 核心
+
+			@babel/preset-env      es6+ 包
+
+
+		做个js文件模块，测试导出引入
+
+		导出模块:
+			export default {}
+
+		引入模块:
+			import 名字 from 模块名
+
+		配置babel预设:
+			module>rules> + {}
+			  {
+		        test:/\.js$/,
+		        exclude:/node_modules/, 排除
+		        use:[{
+		          loader:'babel-loader',
+		          options:{
+		            presets: ['@babel/preset-env']
+		          }
+		        }]
+		      }	
+	---------------------------------------------------
+
+	插件:  是一个类|对象
+
+		产出html
+
+		npm i html-webpack-plugin ---save-dev
+		const HtmlWebpackPlugin = require('html-webpack-plugin')
+		plugins:[
+		        new HtmlWebpackPlugin({
+		            template: './index.html',
+	      			filename: './index.html',//到path目录找生产环境资源|开发环境的publicPath
+		            hash:true,//防止缓存,会给文件后面加入hash
+		            minify:{
+		                removeAttributeQuotes:true//压缩 去掉引号
+		            }
+		        })
+		]
+
+		publicPath: '/', 
+		filename: 'js/[name].js',
+
+	---------------------------------------------------
+
+	css抽离（代码分离）  extract-text  |  mini-css-extract
+
+		yarn add extract-text-webpack-plugin@next --dev
+
+		npm i extract-text-webpack-plugin@next --save-dev | -D
+			@next 兼容webpack4 未来会不需要
+
+		const extractTextPlugin = require("extract-text-webpack-plugin")
+
+		loader配置：
+		use: ExtractTextWebapckPlugin.extract({
+	          use: 'css-loader'
+	        }) //不再需要style-loader
+
+		new ExtractTextWebapckPlugin('css/[name][hash:6].css')
+
+		同类推荐: mini-css-extract-plugin
+	---------------------------------------------------
+
+	图片|文件 打包   
+	yarn add url-loader file-loader --dev  
+
+	npm i url-loader file-loader --save-dev
+		url-loader 存base64  file-loader存文件
+		{
+	        test:/\.(png|jpg|gif)/,
+	        use:[{
+	          loader: 'url-loader',
+	          options: {
+	            limit: 5000,
+	            outputPath: 'images/', 5000意思存到images
+	          }
+	        }]
+	      }
+
+	css中引入 | js动态(模块化) 引入
+
+
+	资源copy： 静态资源(js，数据图片，json) -> 生产环境
+
+	 	require('copy-webpack-plugin')
+	 	new CopyWebpackPlugin([
+	      { from: path.resolve(__dirname,'static'), to: path.resolve(__dirname,'build/static') }
+	    ])
+
+	    同类推荐： transfer-webpack-plugin
+
+
+
+	自动加载模块，而不必到处 import 或 require 
+
+	new webpack.ProvidePlugin({
+	  $: 'jquery',
+	  _: 'lodash',
+	  bulala:'jquery'
+	})
+
+	--------------------------------------------------
+
+	webpack.config -> webpack.config.dev|prod|base
+
+
+		"dev": "webpack-dev-server --mode development --config config/webpack.config.dev.js",
+	    "build": "webpack --mode production --config config/webpack.config.prod.js",
+	    "server": "webpack-dev-server --mode development --config config/webpack.config.dev.js"
+
+
+		webpack-merge 安装
+
+
+
+webpack_MPA
+
+VUE|REACT_SPA
+
+VUE|REACT_CLI_MPA
+
+ssr: 服务器渲染
+
+react-native
+
+
